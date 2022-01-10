@@ -15,14 +15,18 @@ on:
       - security.md
       - support.md
 
+env:
+  AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+  AZURE_APPNAME: ${{ secrets.AZURE_APPNAME }}
+
 defaults:
   run:
     shell: bash
 
 jobs:
   build:
-    if: ${{ secrets.AZURE_CREDENTIALS }} != '' && ${{ secrets.AZURE_APPNAME }} != ''
     name: build
+    if: ${{ secrets.AZURE_CREDENTIALS }} != ''
     runs-on: ubuntu-latest
     steps:
       - name: 🤘 checkout
