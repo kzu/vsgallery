@@ -25,14 +25,14 @@ public static class VisualStudioGallery
     /// </summary>
     [FunctionName(nameof(Update))]
     public static void Update(
-        [BlobTrigger("feed/{name}.vsix")] Stream blob,
+        [BlobTrigger("vsgallery/{name}.vsix")] Stream blob,
         Uri uri,
         string name,
-        [Blob("feed/atom.xml", FileAccess.Read)]
+        [Blob("vsgallery/atom.xml", FileAccess.Read)]
         Stream? currentFeed,
-        [Blob("feed/atom.xml", FileAccess.Write)]
+        [Blob("vsgallery/atom.xml", FileAccess.Write)]
         Stream updatedFeed,
-        [Blob("feed/{name}.png", FileAccess.Write)]
+        [Blob("vsgallery/{name}.png", FileAccess.Write)]
         Stream icon,
         ILogger log)
     {
