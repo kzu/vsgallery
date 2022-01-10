@@ -17,10 +17,6 @@ on:
 env:
   DOTNET_NOLOGO: true
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   build:
     name: build
@@ -38,4 +34,4 @@ jobs:
           dotnet format --verify-no-changes -v:diag
 
       - name: 🙏 build
-        run: dotnet build -m:1 -p:VersionLabel="$GITHUB_REF.$GITHUB_RUN_NUMBER"
+        run: dotnet build -m:1

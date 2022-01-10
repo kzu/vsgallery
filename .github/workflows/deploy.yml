@@ -1,0 +1,49 @@
+﻿# Deploys the function. Requires the following repository secrets:
+# * AZURE_CREDENTIALS: see https://www.cazzulino.com/net6functions.html#github-actions-builddeploy 
+#                      on how to create the creds
+# * AZURE_APPNAME: name of the function app.
+
+
+name: deploy
+on: 
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - changelog.md
+      - code-of-conduct.md
+      - security.md
+      - support.md
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    if: ${{ secrets.AZURE_CREDENTIALS }} != '' && ${{ secrets.AZURE_APPNAME }} != ''
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🤘 checkout
+        uses: actions/checkout@v2
+        with: 
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: ⚙ dotnet 6.0.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: ⚙ func 4.x
+        run: npm i -g azure-functions-core-tools@4 --unsafe-perm true  
+
+      - name: 🔓 login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 🚀 deploy
+        working-directory: ./src/VisualStudioGallery
+        run: func azure functionapp publish ${{ secrets.AZURE_APPNAME }} --force
