@@ -3,6 +3,6 @@
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-    "VSGALLERY_STORAGE": "UseDevelopmentStorage=true"
+    "AZURE_STORAGE": "UseDevelopmentStorage=true"
   }
 }
