@@ -34,4 +34,6 @@ jobs:
           dotnet format --verify-no-changes -v:diag
 
       - name: 🙏 build
+        env:
+            AZURE_CONTAINER: ${{ secrets.AZURE_CONTAINER }}
         run: dotnet build -m:1
