@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 /// <summary>
 /// Custom gallery implementation.
 /// </summary>
-[StorageAccount("VSGALLERY_STORAGE")]
+[StorageAccount("AZURE_STORAGE")]
 public static class VisualStudioGallery
 {
     const string FeedId = "ExtensionGallery";
@@ -25,14 +25,14 @@ public static class VisualStudioGallery
     /// </summary>
     [FunctionName(nameof(Update))]
     public static void Update(
-        [BlobTrigger("vsgallery/{name}.vsix")] Stream blob,
+        [BlobTrigger(ThisAssembly.Project.AZURE_CONTAINER + "/{name}.vsix")] Stream blob,
         Uri uri,
         string name,
-        [Blob("vsgallery/atom.xml", FileAccess.Read)]
+        [Blob(ThisAssembly.Project.AZURE_CONTAINER + "/atom.xml", FileAccess.Read)]
         Stream? currentFeed,
-        [Blob("vsgallery/atom.xml", FileAccess.Write)]
+        [Blob(ThisAssembly.Project.AZURE_CONTAINER + "/atom.xml", FileAccess.Write)]
         Stream updatedFeed,
-        [Blob("vsgallery/{name}.png", FileAccess.Write)]
+        [Blob(ThisAssembly.Project.AZURE_CONTAINER + "/{name}.png", FileAccess.Write)]
         Stream icon,
         ILogger log)
     {
