@@ -57,6 +57,7 @@ jobs:
 
       - name: 🚀 deploy
         env:
+          AZURE_CONTAINER: ${{ secrets.AZURE_CONTAINER }}
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
         if: ${{ env.AZURE_CREDENTIALS }}
         working-directory: ./src/VisualStudioGallery
