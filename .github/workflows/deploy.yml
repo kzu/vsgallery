@@ -59,6 +59,7 @@ jobs:
         env:
           AZURE_CONTAINER: ${{ secrets.AZURE_CONTAINER }}
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          AZURE_APPNAME: ${{ secrets.AZURE_APPNAME }}
         if: ${{ env.AZURE_CREDENTIALS }}
         working-directory: ./src/VisualStudioGallery
         run: func azure functionapp publish ${{ secrets.AZURE_APPNAME }} --force
