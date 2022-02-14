@@ -2,10 +2,16 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
+using Octokit.Internal;
+using Octokit;
 
 /// <summary>
 /// Custom gallery implementation.
@@ -24,7 +30,7 @@ public static class VisualStudioGallery
     /// Blob-triggered function that updates the feed.
     /// </summary>
     [FunctionName(nameof(Update))]
-    public static void Update(
+    public static async Task Update(
         [BlobTrigger(ThisAssembly.Project.AZURE_CONTAINER + "/{name}.vsix")] Stream blob,
         Uri uri,
         string name,
@@ -45,6 +51,7 @@ public static class VisualStudioGallery
                 new XElement(AtomNs + "title", new XAttribute("type", "text"), FeedTitle),
                 new XElement(AtomNs + "id", FeedId)
             );
+            log.LogInformation("Created brand new feed.");
         }
         else
         {
@@ -54,8 +61,9 @@ public static class VisualStudioGallery
                 atom.Element(AtomNs + "title")?.SetValue(FeedTitle);
                 atom.Element(AtomNs + "id")?.SetValue(FeedId);
             }
-            catch (XmlException)
+            catch (XmlException xe)
             {
+                log.LogWarning(xe, "Failed to load feed, replacing with blank one.");
                 // Auto-overwrite poison feed content too.
                 atom = new XElement(AtomNs + "feed",
                     new XElement(AtomNs + "title", new XAttribute("type", "text"), FeedTitle),
@@ -75,67 +83,105 @@ public static class VisualStudioGallery
 
         using var archive = new ZipArchive(blob, ZipArchiveMode.Read);
         var zipEntry = archive.GetEntry("extension.vsixmanifest");
-        if (zipEntry != null)
+        if (zipEntry == null)
         {
-            using var stream = zipEntry.Open();
+            log.LogWarning("Could not find extension.vsixmanifest in archive {0}.vsix", name);
+            return;
+        }
 
-            if (XDocument.Load(stream).Root is not XElement manifest ||
-                manifest.Element(VsixNs + "Metadata") is not XElement metadata ||
-                metadata.Element(VsixNs + "Identity") is not XElement identity ||
-                identity.Attribute("Id")?.Value is not string id ||
-                identity.Attribute("Version")?.Value is not string version)
-                return;
+        using var stream = zipEntry.Open();
 
-            var entry = atom.Elements(AtomNs + "entry").FirstOrDefault(x => x.Element(AtomNs + "id")?.Value == id);
-            if (entry != null)
-                entry.Remove();
+        if (XDocument.Load(stream).Root is not XElement manifest ||
+            manifest.Element(VsixNs + "Metadata") is not XElement metadata ||
+            metadata.Element(VsixNs + "Identity") is not XElement identity ||
+            identity.Attribute("Id")?.Value is not string id ||
+            identity.Attribute("Version")?.Value is not string version)
+            return;
 
-            entry = new XElement(AtomNs + "entry",
-                new XElement(AtomNs + "id", id),
-                new XElement(AtomNs + "title", new XAttribute("type", "text"), metadata.Element(VsixNs + "DisplayName")?.Value ?? ""),
-                new XElement(AtomNs + "link",
-                    new XAttribute("rel", "alternate"),
-                    new XAttribute("href", $"{storageBaseUrl}{name}.vsix")),
-                new XElement(AtomNs + "summary", new XAttribute("type", "text"), metadata.Element(VsixNs + "Description")?.Value ?? ""),
-                new XElement(AtomNs + "published", XmlConvert.ToString(DateTimeOffset.UtcNow)),
-                new XElement(AtomNs + "updated", XmlConvert.ToString(DateTimeOffset.UtcNow)),
-                new XElement(AtomNs + "author",
-                    new XElement(AtomNs + "name", identity.Attribute("Publisher")?.Value ?? "")),
-                new XElement(AtomNs + "content",
-                    new XAttribute("type", "application/octet-stream"),
-                    new XAttribute("src", $"{storageBaseUrl}{name}.vsix"))
-            );
+        var entry = atom.Elements(AtomNs + "entry").FirstOrDefault(x => x.Element(AtomNs + "id")?.Value == id);
+        if (entry != null)
+            entry.Remove();
 
-            if (metadata.Element(VsixNs + "Icon") is XElement iconElement)
+        entry = new XElement(AtomNs + "entry",
+            new XElement(AtomNs + "id", id),
+            new XElement(AtomNs + "title", new XAttribute("type", "text"), metadata.Element(VsixNs + "DisplayName")?.Value ?? ""),
+            new XElement(AtomNs + "link",
+                new XAttribute("rel", "alternate"),
+                new XAttribute("href", $"{storageBaseUrl}{name}.vsix")),
+            new XElement(AtomNs + "summary", new XAttribute("type", "text"), metadata.Element(VsixNs + "Description")?.Value ?? ""),
+            new XElement(AtomNs + "published", XmlConvert.ToString(DateTimeOffset.UtcNow)),
+            new XElement(AtomNs + "updated", XmlConvert.ToString(DateTimeOffset.UtcNow)),
+            new XElement(AtomNs + "author",
+                new XElement(AtomNs + "name", identity.Attribute("Publisher")?.Value ?? "")),
+            new XElement(AtomNs + "content",
+                new XAttribute("type", "application/octet-stream"),
+                new XAttribute("src", $"{storageBaseUrl}{name}.vsix"))
+        );
+
+        if (metadata.Element(VsixNs + "Icon") is XElement iconElement)
+        {
+            try
             {
-                try
+                var iconEntry = archive.GetEntry(iconElement.Value.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                if (iconEntry != null)
                 {
-                    var iconEntry = archive.GetEntry(iconElement.Value.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-                    if (iconEntry != null)
-                    {
-                        using (var iconStream = iconEntry.Open())
-                            iconStream.CopyTo(icon);
+                    using (var iconStream = iconEntry.Open())
+                        iconStream.CopyTo(icon);
 
-                        entry.Add(new XElement(AtomNs + "link",
-                            new XAttribute("rel", "icon"),
-                            new XAttribute("href", $"{storageBaseUrl}{name}.png")));
-                    }
+                    entry.Add(new XElement(AtomNs + "link",
+                        new XAttribute("rel", "icon"),
+                        new XAttribute("href", $"{storageBaseUrl}{name}.png")));
                 }
-                catch { }
             }
+            catch { }
+        }
 
-            var vsix = new XElement(GalleryNs + "Vsix",
-                new XElement(GalleryNs + "Id", id),
-                new XElement(GalleryNs + "Version", version),
-                new XElement(GalleryNs + "References")
-            );
+        var vsix = new XElement(GalleryNs + "Vsix",
+            new XElement(GalleryNs + "Id", id),
+            new XElement(GalleryNs + "Version", version),
+            new XElement(GalleryNs + "References")
+        );
 
-            entry.Add(vsix);
-            atom.AddFirst(entry);
+        entry.Add(vsix);
+        atom.AddFirst(entry);
 
-            using var writer = XmlWriter.Create(updatedFeed, new XmlWriterSettings { CloseOutput = false, Indent = true });
-            atom.WriteTo(writer);
-            writer.Flush();
+        using var writer = XmlWriter.Create(updatedFeed, new XmlWriterSettings { CloseOutput = false, Indent = true });
+        atom.WriteTo(writer);
+        writer.Flush();
+
+        // Optionally update commit by reporting the feed update status.
+        var token = Environment.GetEnvironmentVariable("GH_TOKEN");
+        if (!string.IsNullOrEmpty(token))
+        {
+            var jsonEntry = archive.GetEntry("source.json");
+            if (jsonEntry != null)
+            {
+                using var jsStream = jsonEntry.Open();
+                using var jsReader = new StreamReader(jsStream);
+                var source = JsonSerializer.Deserialize<Source>(jsStream, new JsonSerializerOptions {  AllowTrailingCommas = true });
+                var repo = source?.repository ?? Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
+                if (source != null && repo != null && repo.Split('/') is string[] parts && parts.Length == 2)
+                {
+                    var client = new GitHubClient(new ProductHeaderValue("vsgallery"), new InMemoryCredentialStore(new Credentials(token, AuthenticationType.Bearer)));
+                    var status = await client.Repository.Status.Create(parts[0], parts[1], source.commit, new NewCommitStatus
+                    {
+                        Context = "feed",
+                        State = CommitState.Success,
+                        TargetUrl = $"{storageBaseUrl}/atom.xml",
+                        Description = $"Successfully published to {storageBaseUrl.Split('/', StringSplitOptions.RemoveEmptyEntries)[^1]} gallery feed"
+                    });
+                }
+                else
+                {
+                    log.LogWarning("Could not determine GitHub repository name.");
+                }
+            }
+            else
+            {
+                log.LogWarning("Could not find source.json in archive {0}.vsix", name);
+            }
         }
     }
 }
+
+record Source(string commit, string? repository = default);
