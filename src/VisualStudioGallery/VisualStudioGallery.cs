@@ -10,8 +10,8 @@ using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
-using Octokit.Internal;
 using Octokit;
+using Octokit.Internal;
 
 /// <summary>
 /// Custom gallery implementation.
@@ -158,7 +158,7 @@ public static class VisualStudioGallery
             {
                 using var jsStream = jsonEntry.Open();
                 using var jsReader = new StreamReader(jsStream);
-                var source = JsonSerializer.Deserialize<Source>(jsStream, new JsonSerializerOptions {  AllowTrailingCommas = true });
+                var source = JsonSerializer.Deserialize<Source>(jsStream, new JsonSerializerOptions { AllowTrailingCommas = true });
                 var repo = source?.repository;
                 if (string.IsNullOrEmpty(repo))
                     repo = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
