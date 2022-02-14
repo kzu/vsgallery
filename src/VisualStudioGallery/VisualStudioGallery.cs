@@ -147,6 +147,8 @@ public static class VisualStudioGallery
         atom.WriteTo(writer);
         writer.Flush();
 
+        log.LogInformation("Successfully updated feed with {0} {1}.", id, version);
+
         // Optionally update commit by reporting the feed update status.
         var token = Environment.GetEnvironmentVariable("GH_TOKEN");
         if (!string.IsNullOrEmpty(token))
@@ -171,6 +173,8 @@ public static class VisualStudioGallery
                         TargetUrl = $"{storageBaseUrl}/atom.xml",
                         Description = $"Successfully published to {storageBaseUrl.Split('/', StringSplitOptions.RemoveEmptyEntries)[^1]} gallery feed"
                     });
+
+                    log.LogInformation("Successfully reported status for {0}@{1}.", repo, source.commit);
                 }
                 else
                 {
