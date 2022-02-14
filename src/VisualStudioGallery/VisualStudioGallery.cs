@@ -159,8 +159,11 @@ public static class VisualStudioGallery
                 using var jsStream = jsonEntry.Open();
                 using var jsReader = new StreamReader(jsStream);
                 var source = JsonSerializer.Deserialize<Source>(jsStream, new JsonSerializerOptions {  AllowTrailingCommas = true });
-                var repo = source?.repository ?? Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
-                if (source != null && repo != null && repo.Split('/') is string[] parts && parts.Length == 2)
+                var repo = source?.repository;
+                if (string.IsNullOrEmpty(repo))
+                    repo = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
+
+                if (source != null && !string.IsNullOrEmpty(repo) && repo.Split('/') is string[] parts && parts.Length == 2)
                 {
                     var client = new GitHubClient(new ProductHeaderValue("vsgallery"), new InMemoryCredentialStore(new Credentials(token, AuthenticationType.Bearer)));
                     var status = await client.Repository.Status.Create(parts[0], parts[1], source.commit, new NewCommitStatus
