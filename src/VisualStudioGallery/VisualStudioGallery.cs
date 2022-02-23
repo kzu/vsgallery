@@ -171,7 +171,7 @@ public static class VisualStudioGallery
                     {
                         Context = "feed-" + kind,
                         State = CommitState.Success,
-                        TargetUrl = $"{storageBaseUrl}/atom.xml",
+                        TargetUrl = $"{storageBaseUrl.TrimEnd('/')}/atom.xml",
                         Description = $"Successfully published to {kind} gallery feed"
                     });
 
