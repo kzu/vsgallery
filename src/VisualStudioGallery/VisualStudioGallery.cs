@@ -166,12 +166,13 @@ public static class VisualStudioGallery
                 if (source != null && !string.IsNullOrEmpty(repo) && repo.Split('/') is string[] parts && parts.Length == 2)
                 {
                     var client = new GitHubClient(new ProductHeaderValue("vsgallery"), new InMemoryCredentialStore(new Credentials(token, AuthenticationType.Bearer)));
+                    var kind = storageBaseUrl.Split('/', StringSplitOptions.RemoveEmptyEntries)[^1];
                     var status = await client.Repository.Status.Create(parts[0], parts[1], source.commit, new NewCommitStatus
                     {
-                        Context = "feed",
+                        Context = "feed-" + kind,
                         State = CommitState.Success,
                         TargetUrl = $"{storageBaseUrl}/atom.xml",
-                        Description = $"Successfully published to {storageBaseUrl.Split('/', StringSplitOptions.RemoveEmptyEntries)[^1]} gallery feed"
+                        Description = $"Successfully published to {kind} gallery feed"
                     });
 
                     log.LogInformation("Successfully reported status for {0}@{1}.", repo, source.commit);
