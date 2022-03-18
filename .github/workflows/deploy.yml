@@ -22,7 +22,7 @@ defaults:
 # NOTE: we cannot use the condition on the job itself: https://github.com/actions/runner/issues/520
 jobs:
   deploy:
-    if: ${{ env.AZURE_CREDENTIALS }}
+    if: ${{ secrets.AZURE_CREDENTIALS }}
     runs-on: ubuntu-latest
     steps:
       - name: 🤘 checkout
