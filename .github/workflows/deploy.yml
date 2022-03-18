@@ -22,13 +22,13 @@ defaults:
 # NOTE: we cannot use the condition on the job itself: https://github.com/actions/runner/issues/520
 jobs:
   deploy:
+    if: ${{ env.AZURE_CREDENTIALS }}
     runs-on: ubuntu-latest
     steps:
       - name: 🤘 checkout
         uses: actions/checkout@v2
         env:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-        if: ${{ env.AZURE_CREDENTIALS }}
         with: 
           submodules: recursive
           fetch-depth: 0
@@ -37,21 +37,18 @@ jobs:
         uses: actions/setup-dotnet@v1
         env:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-        if: ${{ env.AZURE_CREDENTIALS }}
         with:
           dotnet-version: '6.0.x'
 
       - name: ⚙ func 4.x
         env:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-        if: ${{ env.AZURE_CREDENTIALS }}
         run: npm i -g azure-functions-core-tools@4 --unsafe-perm true  
 
       - name: 🔓 login
         uses: azure/login@v1
         env:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-        if: ${{ env.AZURE_CREDENTIALS }}
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -60,6 +57,5 @@ jobs:
           AZURE_CONTAINER: ${{ secrets.AZURE_CONTAINER }}
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
           AZURE_APPNAME: ${{ secrets.AZURE_APPNAME }}
-        if: ${{ env.AZURE_CREDENTIALS }}
         working-directory: ./src/VisualStudioGallery
         run: func azure functionapp publish ${{ secrets.AZURE_APPNAME }} --force
