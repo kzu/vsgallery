@@ -21,11 +21,23 @@ defaults:
 
 # NOTE: we cannot use the condition on the job itself: https://github.com/actions/runner/issues/520
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.deploy.outputs.deploy }}
+    steps:
+        - id: deploy
+          env:
+              AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          if: ${{ env.AZURE_CREDENTIALS }}
+          run: echo "::set-output name=deploy::true"
+
   deploy:
+    needs: [check]
     runs-on: ubuntu-latest
     env:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-    if: ${{ secrets.AZURE_CREDENTIALS }}
+    if: needs.check.outputs.deploy == 'true'
     steps:
       - name: 🤘 checkout
         uses: actions/checkout@v2
