@@ -54,8 +54,8 @@
 	weak
 [file ".github/workflows/build.yml"]
 	url = https://github.com/devlooped/oss/blob/main/.github/workflows/build.yml
-	sha = bbf637b2a565073a89783c9eb4ebd9c460823fe4
-	etag = 6b9139f22428851c8d7329973f3d92802d25e70a5e0c1b24604c23db991ac8e2
+	sha = e19ed3228a0ac7f64a43197241a788fb224a683f
+	etag = 4e65025ab77d15766520234d3a9953ff4f1eea91620e1080f10909de19804877
 	weak
 [file ".github/workflows/changelog.yml"]
 	url = https://github.com/devlooped/oss/blob/main/.github/workflows/changelog.yml
@@ -73,8 +73,8 @@
 	skip
 [file ".gitignore"]
 	url = https://github.com/devlooped/oss/blob/main/.gitignore
-	sha = 978c71c6afd095eaba35097fd7deed44fa09aa91
-	etag = 2b49512f81b6cb44c4ee398975c0edf41bfa4137857b59770805fa7c5e49e94b
+	sha = c78868eba59a3e04602434684f9eac241fef13fb
+	etag = 1c1705a3f0ed65e33c9133996ebaa100aa445a8b968b2904ad48fef938702006
 	weak
 [file "Directory.Build.rsp"]
 	url = https://github.com/devlooped/oss/blob/main/Directory.Build.rsp
@@ -113,13 +113,13 @@
 	weak
 [file "src/Directory.Build.targets"]
 	url = https://github.com/devlooped/oss/blob/main/src/Directory.Build.targets
-	sha = 4f57ffe1d48addf16641934e7b1e47ef70204e6e
-	etag = 87c4dff4b44072c6825b451957af6d920616d77c50152a7d99719151c3d24639
+	sha = 024f73321ffe4e927151ff94666c52c2d425139a
+	etag = 816dff7cb821a885da46ad200f9b8bea3438d74da3172bc43716d5670abaee6c
 	weak
 [file "src/nuget.config"]
 	url = https://github.com/devlooped/oss/blob/main/src/nuget.config
-	sha = 7d0ccab53c166b87b971040f25de06570821f8ac
-	etag = 0ef58051c4db505e16b39954b27ab9e7a903647998b959e0924634d5f01824dd
+	sha = f86b51943f609f1c8bd3c692826fd937167ce0fb
+	etag = 3e536371c7a2c7866fbf1dbc878929cd78cafb7646f569c20dc6ba03b6a1685b
 	weak
 [file "support.md"]
 	url = https://github.com/devlooped/oss/blob/main/support.md
@@ -128,6 +128,6 @@
 	weak
 [file ".github/workflows/test/action.yml"]
 	url = https://github.com/devlooped/oss/blob/main/.github/workflows/test/action.yml
-	sha = 2c82d7d80183eb619d48cddada414ff3c471303a
-	etag = 93a510692a6f4b5350ba486d1e944ea444612f137730f649ae6a2f96d7d970d0
+	sha = 9a1b07589b9bde93bc12528e9325712a32dec418
+	etag = b54216ac431a83ce5477828d391f02046527e7f6fffd21da1d03324d352c3efb
 	weak
